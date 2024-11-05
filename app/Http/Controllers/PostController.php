@@ -12,14 +12,14 @@ class PostController extends Controller
 {
     //--------------------------------------------------
     // 【一覧ページ　(indexアクション)】
+
     public function index()
     {
-//Auth::user()->posts()で現在ログイン中のユーザーに属するすべての投稿を取得
-//orderBy()メソッドをつなげることで作成日時が新しい順に並べ替えています
-    $posts = Auth::user()->posts()->orderBy('created_at', 'desc')->get(); 
-
+    // 投稿を取得し、更新日時が古い順に並べ替える
+        $posts = Post::orderBy('updated_at', 'asc')->get();
         return view('posts.index', compact('posts'));
     }
+}
 //---------------------------------------------------
 // 【詳細ページ】
     //【show()メソッド】特定の投稿（Post）を表示する為のページを返す。
@@ -35,18 +35,21 @@ class PostController extends Controller
     }
 //-------------------------------------------
     // 作成機能
-        public function store(PostRequest $request)
-{
-        $post = new Post();
-        $post->title = $request->input('title');
-        $post->content = $request->input('content');
-        $post->user_id = Auth::id();
-        $post->save();
-        
+    public function store(Request $request)
+    {
+    // バリデーションの追加
+    $request->validate([
+        'title' => 'required|string|max:40',  // タイトルは必須で最大40文字
+        'content' => 'required|string|max:200', // 本文は必須で最大200文字
+    ]);
+    
+    // バリデーション後に投稿を保存
+    Post::create($request->all());
+    return redirect()->route('posts.index');
+}
 /*【フラッシュメッセージの表示】投稿の作成後は投稿一覧ページにリダイレクトさせますが、そのとき「投稿が完了しました。」というフラッシュメッセージを表示。
 リダイレクト時にwith()メソッドを使っています。*/
         return redirect()->route('posts.index')->with('flash_message', '投稿が完了しました。');
-    }
 //-----------------------------------------------
  // 編集ページ
 
@@ -56,29 +59,25 @@ class PostController extends Controller
     {
     //【Authファサード（認証）】のid()メソッドを使うことで、現在ログイン中のユーザーのIDを直接取得できます。
         if ($post->user_id !== Auth::id()) {
-        /*【フラッシュメッセージの表示】投稿の作成後は投稿一覧ページにリダイレクトさせますが、そのとき「不正なアクセスです。」というフラッシュメッセージを表示。
-リダイレクト時にwith()メソッドを使っています。*/
+        /*【フラッシュメッセージの表示】「不正なアクセスです。」というフラッシュメッセージを表示。*/
             return redirect()->route('posts.index')->with('error_message', '不正なアクセスです。');
         }
 
         return view('posts.edit', compact('post'));
     }
 //------------------------------------------
-     // 更新機能
-    
-    /*updateアクションの場合は「どのデータを更新するか」という情報も必要。
-    【showアクション】やeditアクションと同様にPostモデルの型宣言も行い、インスタンスを受け取っています。*/
-    public function update(PostRequest $request, Post $post)
+     //更新機能
+    public function update(Request $request, Post $post)
     {
-        if ($post->user_id !== Auth::id()) {
-            return redirect()->route('posts.index')->with('error_message', '不正なアクセスです。');
-        }
-
-        $post->title = $request->input('title');
-        $post->content = $request->input('content');
-        $post->save();
-
-        return redirect()->route('posts.show', $post)->with('flash_message', '投稿を編集しました。');
+    // バリデーションの追加
+    $request->validate([
+        'title' => 'required|string|max:40',  // タイトルは必須で最大40文字
+        'content' => 'required|string|max:200', // 本文は必須で最大200文字
+        ]);
+    
+    // バリデーション後に投稿を更新
+    $post->update($request->all());
+    return redirect()->route('posts.show', $post);
     }
 //--------------------------------------------
          // 削除機能
@@ -93,7 +92,3 @@ class PostController extends Controller
     
             return redirect()->route('posts.index')->with('flash_message', '投稿を削除しました。');
         }
-    
-
-}
-

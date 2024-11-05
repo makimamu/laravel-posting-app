@@ -13,12 +13,12 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 //UserモデルにMustVerifyEmailインターフェースを実装。「このUserモデルにはメール認証が必要だよ」とLaravel側に伝え、Laravel側で自動的にメールの送信や確認といった処理を実行
 class User extends Authenticatable implements MustVerifyEmail
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    //use HasApiTokens, HasFactory, Notifiable;
 
     /**
      * The attributes that are mass assignable.
      *
-     * @var array<int, string>
+     * @var array<string, string>
      */
     protected $fillable = [
         'name',

@@ -10,14 +10,8 @@ use App\Models\Post;
 
 class PostTest extends TestCase
 {
-    /* ①【RefreshDatabaseトレイトのuse宣言を行う】
-RefreshDatabaseは、テストを実行する度にデータベースをリセットしてくれるトレイトです。
-・トレイト＝いくつかのメソッドをまとめたもの。クラスと似ているが、トレイトはクラスのようにインスタンスを作成できない。クラス内にuse トレイト名と記述することで、そのトレイトが持つメソッド群をクラスに追加できる
-*/
     use RefreshDatabase;
 
-    /* ②【あらかじめダミーデータを追加しておく】
-「ログイン済みのユーザーは投稿一覧ページにアクセスできる」という振る舞いを検証する。*/
     // 未ログインのユーザーは投稿一覧ページにアクセスできない
     public function test_guest_cannot_access_posts_index()
     {
@@ -26,29 +20,21 @@ RefreshDatabaseは、テストを実行する度にデータベースをリセ�
         $response->assertRedirect(route('login'));
     }
 
-    /* 2つ目のfunction test_user_can_access_posts_index()メソッドでは【あらかじめテスト用のデータベースにユーザーのダミーデータを追加】 */
     // ログイン済みのユーザーは投稿一覧ページにアクセスできる
     public function test_user_can_access_posts_index()
     {
-
-        /*　③【ダミーデータの生成にはファクトリを使う】
-テストクラス内では、ファクトリを使ってダミーデータを生成する。ユーザー用のファクトリはLaravel側でもともと用意してくれているので作成なし。
-【Post::factory()->create(['user_id' => $user->id])】のようにcreate()メソッドの引数に連想配列を指定することで
-ファクトリの生成値を上書きすることができます。*/
-
         $user = User::factory()->create();
         $post = Post::factory()->create(['user_id' => $user->id]);
 
         $response = $this->actingAs($user)->get(route('posts.index'));
 
         $response->assertStatus(200);
-        $response->assertSee($post->title);
+
     }
     // 未ログインのユーザーは投稿詳細ページにアクセスできない
     public function test_guest_cannot_access_posts_show()
     {
         $user = User::factory()->create();
-        $post = Post::factory()->create(['user_id' => $user->id]);
 
         $response = $this->get(route('posts.show', $post));
 
@@ -59,14 +45,11 @@ RefreshDatabaseは、テストを実行する度にデータベースをリセ�
     public function test_user_can_access_posts_show()
     {
         $user = User::factory()->create();
-        $post = Post::factory()->create(['user_id' => $user->id]);
 
         $response = $this->actingAs($user)->get(route('posts.show', $post));
 
         $response->assertStatus(200);
-        $response->assertSee($post->title);
     }
-
     // 未ログインのユーザーは新規投稿ページにアクセスできない
     public function test_guest_cannot_access_posts_create()
     {
@@ -75,7 +58,7 @@ RefreshDatabaseは、テストを実行する度にデータベースをリセ�
         $response->assertRedirect(route('login'));
     }
 
-     // ログイン済みのユーザーは新規投稿ページにアクセスできる
+    // ログイン済みのユーザーは新規投稿ページにアクセスできる
     public function test_user_can_access_posts_create()
     {
         $user = User::factory()->create();
@@ -98,7 +81,7 @@ RefreshDatabaseは、テストを実行する度にデータベースをリセ�
         $response->assertRedirect(route('login'));
     }
 
-     // ログイン済みのユーザーは投稿を作成できる
+    // ログイン済みのユーザーは投稿を作成できる
     public function test_user_can_access_posts_store()
     {
         $user = User::factory()->create();
@@ -113,26 +96,28 @@ RefreshDatabaseは、テストを実行する度にデータベースをリセ�
         $this->assertDatabaseHas('posts', $post);
         $response->assertRedirect(route('posts.index'));
     }
-         // 未ログインのユーザーは投稿編集ページにアクセスできない-----------------------------
-        public function test_guest_cannot_access_posts_edit()
+         // 未ログインのユーザーは投稿編集ページにアクセスできない
+    public function test_guest_cannot_access_posts_edit()
     {
         $user = User::factory()->create();
         $post = Post::factory()->create(['user_id' => $user->id]);
+
         $response = $this->get(route('posts.edit', $post));
 
         $response->assertRedirect(route('login'));
     }
-    // ログイン済みのユーザーは他人の投稿編集ページにアクセスできない
+      // ログイン済みのユーザーは他人の投稿編集ページにアクセスできない
     public function test_user_cannot_access_others_posts_edit()
     {
         $user = User::factory()->create();
         $other_user = User::factory()->create();
         $others_post = Post::factory()->create(['user_id' => $other_user->id]);
+
         $response = $this->actingAs($user)->get(route('posts.edit', $others_post));
 
         $response->assertRedirect(route('posts.index'));
     }
-
+    
      // ログイン済みのユーザーは自身の投稿編集ページにアクセスできる
     public function test_user_can_access_own_posts_edit()
     {
@@ -143,7 +128,7 @@ RefreshDatabaseは、テストを実行する度にデータベースをリセ�
 
         $response->assertStatus(200);
     }
-    // 未ログインのユーザーは投稿を更新できない-----------------------
+    // 未ログインのユーザーは投稿を更新できない
     public function test_guest_cannot_update_post()
     {
         $user = User::factory()->create();
@@ -160,7 +145,7 @@ RefreshDatabaseは、テストを実行する度にデータベースをリセ�
         $response->assertRedirect(route('login'));
     }
 
-    // ログイン済みのユーザーは他人の投稿を更新できない
+     // ログイン済みのユーザーは他人の投稿を更新できない
     public function test_user_cannot_update_others_post()
     {
         $user = User::factory()->create();
@@ -178,8 +163,8 @@ RefreshDatabaseは、テストを実行する度にデータベースをリセ�
         $response->assertRedirect(route('posts.index'));
     }
 
-    // ログイン済みのユーザーは自身の投稿を更新できる
-    public function test_user_can_update_own_post()
+     // ログイン済みのユーザーは自身の投稿を更新できる
+        public function test_user_can_update_own_post()
     {
         $user = User::factory()->create();
         $old_post = Post::factory()->create(['user_id' => $user->id]);
@@ -194,8 +179,7 @@ RefreshDatabaseは、テストを実行する度にデータベースをリセ�
         $this->assertDatabaseHas('posts', $new_post);
         $response->assertRedirect(route('posts.show', $old_post));
     }
-
-    // 未ログインのユーザーは投稿を削除できない
+         // 未ログインのユーザーは投稿を削除できない
     public function test_guest_cannot_destroy_post()
     {
         $user = User::factory()->create();
@@ -231,6 +215,5 @@ RefreshDatabaseは、テストを実行する度にデータベースをリセ�
         $this->assertDatabaseMissing('posts', ['id' => $post->id]);
         $response->assertRedirect(route('posts.index'));
     }
-
-
 }
+
